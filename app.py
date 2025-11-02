@@ -1,8 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for, jsonify
 from datetime import datetime, timezone, timedelta
-from threading import Thread
-import time
-import requests
 
 app = Flask(__name__)
 visit_records = []
@@ -42,27 +39,7 @@ def silv3():
 @app.route('/clear', methods=['POST'])
 def clear():
     visit_records.clear()
-    return redirect(url_for('silv3'))
-
-# 서버 자기 자신 ping 기능
-def keep_alive(url, interval=300):
-    """
-    url: 서버의 외부 URL (Render에서 제공하는 URL)
-    interval: ping 간격 (초, 기본 5분)
-    """
-    while True:
-        try:
-            requests.get(url)
-            print(f"[Ping] {url} 성공")
-        except Exception as e:
-            print(f"[Ping] {url} 실패: {e}")
-        time.sleep(interval)
+    return redirect(url_for('silv3')
 
 if __name__ == '__main__':
-    # Render에서 배포된 외부 URL로 변경하세요!
-    server_url = "https://YOUR-RENDER-DOMAIN.onrender.com/"
-    thread = Thread(target=keep_alive, args=(server_url,))
-    thread.daemon = True
-    thread.start()
-
     app.run(host='0.0.0.0', port=5000, debug=True)
