@@ -1,9 +1,9 @@
 import os
 from flask import Flask, session, redirect, url_for, request, render_template, jsonify
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # 안전한 랜덤 시크릿 키 생성
+app.secret_key = os.urandom(24)  # 안전한 랜덤 시크릿 키
 
 visit_records = []
 
@@ -13,32 +13,39 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
         id = request.form.get('id')
         pw = request.form.get('pw')
 
-        ADMIN_ID = 'admin'
-        ADMIN_PW = '1234'
+        ADMIN_ID = 'adm1n'
+        ADMIN_PW = 'thisispw'
 
         if id == ADMIN_ID and pw == ADMIN_PW:
             session['logged_in'] = True
-            return redirect(url_for('admin'))
+            return redirect(url_for('admin_page'))
         else:
-            return render_template('login.html', error='아이디 또는 비밀번호가 올바르지 않습니다.')
+            error = '아이디 또는 비밀번호가 올바르지 않습니다.'
     
-    return render_template('login.html')
+    return render_template('login.html', error=error)
 
 @app.route('/record', methods=['POST'])
 def record():
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    x_forwarded_for = request.headers.get('X-Forwarded-For', '')
+    ip = x_forwarded_for.split(',')[0].strip() if x_forwarded_for else request.remote_addr
+
+    kst = timezone(timedelta(hours=9))
+    now = datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
+
     visit_records.insert(0, {'ip': ip, 'time': now})
     if len(visit_records) > 500:
         visit_records.pop()
+
     return jsonify({'ip': ip, 'time': now})
 
 @app.route('/admin')
-def admin():
+def admin_page():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     return render_template('admin.html', records=visit_records)
@@ -48,7 +55,7 @@ def clear():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     visit_records.clear()
-    return redirect(url_for('admin'))
+    return redirect(url_for('admin_page'))
 
 @app.route('/logout')
 def logout():
