@@ -5,41 +5,65 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>로그인</title>
 <style>
-body { font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',Arial; background:#f6f8fa; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
-.card { background:white; padding:32px; border-radius:12px; box-shadow:0 6px 30px rgba(20,20,40,0.08); max-width:400px; width:calc(100%-48px); text-align:center; }
+body { 
+  font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',Arial; 
+  background:#f6f8fa; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  height:100vh; 
+  margin:0; 
+}
+.card { 
+  background:white; 
+  padding:32px; 
+  border-radius:12px; 
+  box-shadow:0 6px 30px rgba(20,20,40,0.08); 
+  max-width:400px; 
+  width:calc(100% - 48px); 
+  text-align:center; 
+}
 h1 { margin-bottom:24px; }
-input { width:100%; padding:10px 12px; margin-bottom:12px; border:1px solid #ccc; border-radius:8px; font-size:1rem; box-sizing:border-box; }
-button { width:100%; padding:10px; background:#007bff; color:white; border:none; border-radius:8px; font-size:1rem; cursor:pointer; transition:background 0.2s; }
+input { 
+  width:100%; 
+  padding:10px 12px; 
+  margin-bottom:12px; 
+  border:1px solid #ccc; 
+  border-radius:8px; 
+  font-size:1rem; 
+  box-sizing:border-box; 
+}
+button { 
+  width:100%; 
+  padding:10px; 
+  background:#007bff; 
+  color:white; 
+  border:none; 
+  border-radius:8px; 
+  font-size:1rem; 
+  cursor:pointer; 
+  transition:background 0.2s; 
+}
 button:hover { background:#0056b3; }
-.error { color:red; margin-top:10px; font-size:0.9rem; display:none; }
+.error { color:red; margin-top:10px; font-size:0.9rem; }
 .back { margin-top:16px; font-size:0.9rem; color:#007bff; cursor:pointer; }
 </style>
 </head>
 <body>
 <div class="card">
   <h1>로그인</h1>
-  <input type="text" id="id" placeholder="아이디" autocomplete="off" />
-  <input type="password" id="pw" placeholder="비밀번호" />
-  <button id="loginBtn">로그인</button>
-  <p id="errorMsg" class="error">아이디 또는 비밀번호가 올바르지 않습니다.</p>
+
+  <form method="POST" action="/login">
+    <input type="text" name="id" placeholder="아이디" autocomplete="off" required />
+    <input type="password" name="pw" placeholder="비밀번호" required />
+    <button type="submit">로그인</button>
+  </form>
+
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% endif %}
+
   <div class="back" onclick="window.location.href='/'">← 돌아가기</div>
 </div>
-
-<script>
-const loginBtn = document.getElementById('loginBtn');
-const errorMsg = document.getElementById('errorMsg');
-loginBtn.addEventListener('click', () => {
-  const id = document.getElementById('id').value.trim();
-  const pw = document.getElementById('pw').value.trim();
-  const ADMIN_ID = 'admin';
-  const ADMIN_PW = '1234';
-  if(id===ADMIN_ID && pw===ADMIN_PW) {
-    window.location.href='/admin';
-  } else {
-    errorMsg.style.display='block';
-  }
-});
-document.addEventListener('keydown', (e)=>{ if(e.key==='Enter') loginBtn.click(); });
-</script>
 </body>
 </html>
