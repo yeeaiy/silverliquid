@@ -28,7 +28,7 @@ async function recordVisit() {
   const metaEl = document.getElementById('meta');
   try {
     await fetch('/record', { method: 'POST' });
-    metaEl.textContent = `기록 완료 • 서버에 IP 전송됨`;
+    metaEl.textContent = `기록 완료 • 서버 상태 양호`;
   } catch(e) {
     metaEl.textContent = '서버를 확인하세요.';
   }
