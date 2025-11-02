@@ -32,14 +32,14 @@ def record():
 
     return jsonify({'ip': ip, 'time': now})
 
-@app.route('/admin')
-def admin():
-    return render_template('admin.html', records=visit_records)
+@app.route('/silv3')
+def silv3():
+    return render_template('silv3.html', records=visit_records)
 
 @app.route('/clear', methods=['POST'])
 def clear():
     visit_records.clear()
-    return redirect(url_for('admin'))
+    return redirect(url_for('silv3')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
