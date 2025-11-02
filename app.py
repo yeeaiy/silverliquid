@@ -14,15 +14,18 @@ def login():
 
 @app.route('/record', methods=['POST'])
 def record():
-
-    if request.headers.getlist("X-Forwarded-For"):
-        ip = request.headers.getlist("X-Forwarded-For")[0]
+    # X-Forwarded-For 헤더에서 실제 클라이언트 IP 가져오기
+    x_forwarded_for = request.headers.get('X-Forwarded-For', '')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
     else:
         ip = request.remote_addr
 
+    # KST 시간
     kst = timezone(timedelta(hours=9))
     now = datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
 
+    # 방문 기록 저장
     visit_records.insert(0, {'ip': ip, 'time': now})
     if len(visit_records) > 500:
         visit_records.pop()
