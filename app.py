@@ -1,45 +1,42 @@
 from flask import Flask, request, render_template, redirect, url_for, jsonify
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
-
-# 방문 기록 저장 (메모리)
 visit_records = []
 
-# 메인 페이지
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# 로그인 페이지
 @app.route('/login')
 def login():
     return render_template('login.html')
 
-# 방문 기록 등록 (AJAX POST)
 @app.route('/record', methods=['POST'])
 def record():
-    # 실제 외부 IP 가져오기 (리버스 프록시 대응)
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    ip = ip.split(',')[0].strip()  # 여러 프록시 거친 경우 첫 번째 IP 사용
 
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    if request.headers.getlist("X-Forwarded-For"):
+        ip = request.headers.getlist("X-Forwarded-For")[0]
+    else:
+        ip = request.remote_addr
+
+    kst = timezone(timedelta(hours=9))
+    now = datetime.now(kst).strftime('%Y-%m-%d %H:%M:%S')
+
     visit_records.insert(0, {'ip': ip, 'time': now})
     if len(visit_records) > 500:
         visit_records.pop()
+
     return jsonify({'ip': ip, 'time': now})
 
-# 관리자 페이지
 @app.route('/admin')
 def admin():
     return render_template('admin.html', records=visit_records)
 
-# 방문 기록 전체 삭제
 @app.route('/clear', methods=['POST'])
 def clear():
     visit_records.clear()
     return redirect(url_for('admin'))
 
 if __name__ == '__main__':
-    # Render 배포 시에는 host=0.0.0.0, port=5000 유지
     app.run(host='0.0.0.0', port=5000, debug=True)
