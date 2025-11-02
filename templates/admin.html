@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리자 — 방문 기록</title>
+<style>
+body { font-family: system-ui; margin:0; padding:20px; background:#f6f8fa;}
+.card { background:#fff; padding:20px; border-radius:12px; max-width:600px; margin:0 auto; box-shadow:0 6px 20px rgba(0,0,0,0.08);}
+.item { padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;}
+.ip { font-weight:700; }
+.time { color:#666; }
+button { padding:6px 12px; border:none; border-radius:8px; cursor:pointer; background:#ff5a5f; color:white; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>방문 기록</h1>
+  {% if records %}
+    {% for r in records %}
+      <div class="item">
+        <span class="ip">{{ r.ip }}</span>
+        <span class="time">{{ r.time }}</span>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>방문 기록이 없습니다.</p>
+  {% endif %}
+  <form action="/clear" method="post" style="margin-top:12px;">
+    <button type="submit">전체 삭제</button>
+  </form>
+</div>
+</body>
+</html>
