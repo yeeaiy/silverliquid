@@ -6,21 +6,21 @@ from flask import Flask, session, redirect, url_for, request, render_template, j
 from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.urandom(24)  # 안전한 시크릿 키
 
 visit_records = []
 
 def keep_alive():
     while True:
-        time.sleep(300)
+        time.sleep(300)  # 5분마다 ping
         try:
-            requests.get("https://silverliquid.onrender.com")
-            print("keep-alive ping sent")
+            url = os.environ.get('SELF_URL', 'https://silverliquid.onrender.com')
+            requests.get(url)
+            print("Keep-alive ping sent")
         except Exception as e:
-            print(f"ping fail: {e}")
+            print(f"Keep-alive failed: {e}")
 
 threading.Thread(target=keep_alive, daemon=True).start()
-
 
 @app.route('/')
 def index():
@@ -81,6 +81,6 @@ def logout():
     session.pop('logged_in', None)
     return redirect(url_for('index'))
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
