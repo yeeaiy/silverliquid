@@ -3,14 +3,108 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>_beta_v.0.0.0</title>
+<title>테스트서버</title>
 <style>
-body { font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',Arial; margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f6f8fa;}
-.card { background:white; padding:28px; border-radius:12px; box-shadow:0 6px 30px rgba(20,20,40,0.08); max-width:520px; width:calc(100%-48px); text-align:center;}
-.ip { font-size:2.4rem; font-weight:700; margin:12px 0; }
-.meta { color:#666; margin-bottom:12px; }
-.login-btn { position:absolute; top:16px; right:16px; background:#007bff; color:white; border:none; border-radius:8px; padding:8px 14px; font-size:0.95rem; cursor:pointer; transition:background 0.2s;}
+body { 
+  font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',Arial; 
+  margin:0; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  min-height:100vh; 
+  background:#f6f8fa;
+}
+
+.card { 
+  background:white; 
+  padding:28px; 
+  border-radius:12px; 
+  box-shadow:0 6px 30px rgba(20,20,40,0.08); 
+  max-width:520px; 
+  width:calc(100%-48px); 
+  text-align:center;
+  position:relative;
+}
+
+/* 로그인 버튼 */
+.login-btn { 
+  position:absolute; 
+  top:16px; 
+  right:16px; 
+  background:#007bff; 
+  color:white; 
+  border:none; 
+  border-radius:8px; 
+  padding:8px 14px; 
+  font-size:0.95rem; 
+  cursor:pointer; 
+  transition:background 0.2s;
+}
 .login-btn:hover { background:#0056b3; }
+
+/* LP판 */
+.lp-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+  margin: 0 auto 20px auto;
+  transform: rotate(0deg);
+  transition: transform 0.1s linear;
+}
+
+.lp-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.lp-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+}
+
+/* 재생 버튼 */
+button#playBtn {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(145deg, #c0c0c0, #6b6b6b);
+  border: 2px solid #999;
+  border-radius: 50%;
+  clip-path: polygon(30% 20%, 30% 80%, 75% 50%);
+  cursor: pointer;
+  box-shadow: inset -2px -2px 5px rgba(255,255,255,0.5), 
+              inset 2px 2px 5px rgba(0,0,0,0.3),
+              0 5px 15px rgba(0,0,0,0.4);
+  transition: transform 0.1s;
+  margin-bottom: 10px;
+}
+
+button#playBtn:hover { transform: scale(1.1); }
+
+/* 음악 제목 */
+#songTitle {
+  margin-top: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 기존 텍스트 */
+#ip { font-size:2.4rem; font-weight:700; margin:12px 0; }
+#meta { color:#666; margin-bottom:12px; }
+
 </style>
 </head>
 <body>
@@ -18,12 +112,24 @@ body { font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto
 <button class="login-btn" onclick="window.location.href='/login'">로그인</button>
 
 <div class="card">
-  <h1>-테스트서버 곧 개발예정-</h1>
-  <div id="ip" class="ip">수능화이팅!!</div>
-  <div id="meta" class="meta">접속 기록 중...</div>
+
+  <!-- LP판 -->
+  <div class="lp-container" id="lp">
+    <img src="https://image.genie.co.kr/Y/IMAGE/IMG_ALBUM/083/809/794/83809794_1684804647260_1_600x600.JPG" alt="앨범 커버">
+  </div>
+
+  <button id="playBtn"></button>
+  <div id="songTitle">알레프 - 사과향</div>
+
+  <!-- 오디오 재생 -->
+  <audio id="audio">
+     <source src="{{ url_for('static', filename='apple.mp3') }}" type="audio/mpeg">
+  </audio>
+
 </div>
 
 <script>
+// 접속 기록
 async function recordVisit() {
   const metaEl = document.getElementById('meta');
   try {
@@ -35,6 +141,35 @@ async function recordVisit() {
 }
 
 recordVisit();
+
+// LP판 회전 + 오디오
+const lp = document.getElementById('lp');
+const btn = document.getElementById('playBtn');
+const audio = document.getElementById('audio');
+
+let isSpinning = false;
+let currentRotation = 0;
+let anim;
+
+function rotateStep() {
+  if(isSpinning){
+    currentRotation += 0.5; // 회전 속도
+    lp.style.transform = `rotate(${currentRotation}deg)`;
+    anim = requestAnimationFrame(rotateStep);
+  }
+}
+
+btn.addEventListener('click', () => {
+  if(isSpinning){
+    isSpinning = false;
+    cancelAnimationFrame(anim);
+    audio.pause();
+  } else {
+    isSpinning = true;
+    rotateStep();
+    audio.play();
+  }
+});
 </script>
 
 </body>
