@@ -26,7 +26,6 @@ body {
   position:relative;
 }
 
-/* 로그인 버튼 */
 .login-btn { 
   position:absolute; 
   top:16px; 
@@ -42,7 +41,6 @@ body {
 }
 .login-btn:hover { background:#0056b3; }
 
-/* LP판 */
 .lp-container {
   position: relative;
   width: 300px;
@@ -50,8 +48,6 @@ body {
   border-radius: 50%;
   box-shadow: 0 15px 30px rgba(0,0,0,0.2);
   margin: 0 auto 20px auto;
-  transform: rotate(0deg);
-  transition: transform 0.1s linear;
   overflow: hidden;
 }
 
@@ -76,7 +72,6 @@ body {
   box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
 }
 
-/* 버튼 영역 */
 .controls {
   display: flex;
   justify-content: center;
@@ -84,7 +79,6 @@ body {
   gap: 30px;
 }
 
-/* 재생/이전/다음 버튼 */
 .control-btn {
   width: 60px;
   height: 60px;
@@ -105,12 +99,6 @@ body {
 
 .control-btn:hover { transform: scale(1.1); }
 
-/* 재생버튼만 삼각형 표시 */
-#playBtn {
-  clip-path: polygon(30% 20%, 30% 80%, 75% 50%);
-}
-
-/* 음악 제목 */
 #songTitle {
   margin-top: 10px;
   font-size: 18px;
@@ -118,7 +106,26 @@ body {
   color: #333;
 }
 
-/* 애니메이션 */
+/* 재생 바 */
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background: #e5e5e5;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 16px;
+  cursor: pointer;
+  position: relative;
+}
+
+.progress {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #007bff, #66b3ff);
+  border-radius: 5px;
+  transition: width 0.2s linear;
+}
+
 @keyframes cdOutRight {
   0% { transform: scale(1) translateX(0); opacity: 1; }
   50% { transform: scale(1.3) translateX(0); opacity: 1; }
@@ -150,21 +157,22 @@ body {
 
 <div class="card">
 
-  <!-- LP판 -->
   <div class="lp-container" id="lp">
     <img id="albumImg" src="https://image.genie.co.kr/Y/IMAGE/IMG_ALBUM/083/809/794/83809794_1684804647260_1_600x600.JPG" alt="앨범 커버">
   </div>
 
-  <!-- 컨트롤 버튼 -->
   <div class="controls">
     <button class="control-btn" id="prevBtn">⏮</button>
-    <button class="control-btn" id="playBtn"></button>
+    <button class="control-btn" id="playBtn">▶️</button>
     <button class="control-btn" id="nextBtn">⏭</button>
   </div>
 
   <div id="songTitle">알레프 - 사과향</div>
 
-  <!-- 오디오 재생 -->
+  <div class="progress-container" id="progressContainer">
+    <div class="progress" id="progress"></div>
+  </div>
+
   <audio id="audio">
      <source src="{{ url_for('static', filename='apple.mp3') }}" type="audio/mpeg">
   </audio>
@@ -179,9 +187,8 @@ const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 const audio = document.getElementById('audio');
 const songTitle = document.getElementById('songTitle');
-
-let isSpinning = false;
-let currentRotation = 0;
+const progress = document.getElementById('progress');
+const progressContainer = document.getElementById('progressContainer');
 
 const songs = [
   {
@@ -202,51 +209,93 @@ const songs = [
 ];
 
 let currentIndex = 0;
+let isPlaying = false;
+let currentRotation = 0;
+let spinFrame;
 
 function rotateStep() {
-  if (isSpinning) {
-    currentRotation += 0.5;
-    lp.style.transform = `rotate(${currentRotation}deg)`;
-    requestAnimationFrame(rotateStep);
+  if (isPlaying) {
+    currentRotation += 0.4; // 회전 속도
+    albumImg.style.transform = `rotate(${currentRotation}deg)`;
+    spinFrame = requestAnimationFrame(rotateStep);
   }
 }
 
-playBtn.addEventListener('click', () => {
-  if (isSpinning) {
-    isSpinning = false;
-    audio.pause();
-  } else {
-    isSpinning = true;
-    rotateStep();
+function startRotation() {
+  cancelAnimationFrame(spinFrame);
+  rotateStep();
+}
+
+function stopRotation() {
+  cancelAnimationFrame(spinFrame);
+}
+
+function updateSong(index) {
+  const song = songs[index];
+  albumImg.src = song.img;
+  songTitle.textContent = song.title;
+  audio.src = song.src;
+}
+
+function togglePlay() {
+  if (!isPlaying) {
+    isPlaying = true;
     audio.play();
+    startRotation();
+    playBtn.textContent = '⏸️';
+  } else {
+    isPlaying = false;
+    audio.pause();
+    stopRotation();
+    playBtn.textContent = '▶️';
   }
+}
+
+playBtn.addEventListener('click', togglePlay);
+
+audio.addEventListener('ended', () => {
+  isPlaying = false;
+  stopRotation();
+  playBtn.textContent = '▶️';
 });
 
 function changeSong(next = true) {
-  const outAnim = next ? 'cdOutLeft' : 'cdOutRight';
-  const inAnim = next ? 'cdInRight' : 'cdInLeft';
+    const outAnim = next ? 'cdOutLeft' : 'cdOutRight';
+    const inAnim = next ? 'cdInRight' : 'cdInLeft';
 
-  lp.style.animation = `${outAnim} 1.5s ease forwards`;
+  lp.style.animation = `${outAnim} 1s ease forwards`;
+
+  stopRotation();
+  currentRotation = 0; // ✅ 회전 각도 초기화
+  albumImg.style.transform = `rotate(0deg)`;
 
   setTimeout(() => {
     currentIndex = (currentIndex + (next ? 1 : -1) + songs.length) % songs.length;
-    const song = songs[currentIndex];
+    updateSong(currentIndex);
 
-    albumImg.src = song.img;
-    songTitle.textContent = song.title;
-    audio.src = song.src;
+    lp.style.animation = `${inAnim} 1s ease forwards`;
 
-    // 자동 재생 + 회전 재시작
-    isSpinning = true;
-    rotateStep();
-    audio.play();
-
-    lp.style.animation = `${inAnim} 1.5s ease forwards`;
-  }, 1500);
+    if (isPlaying) {
+      audio.play();
+      startRotation();
+    }
+  }, 1000);
 }
 
 nextBtn.addEventListener('click', () => changeSong(true));
 prevBtn.addEventListener('click', () => changeSong(false));
+
+audio.addEventListener('timeupdate', () => {
+  const percent = (audio.currentTime / audio.duration) * 100;
+  progress.style.width = `${percent}%`;
+});
+
+progressContainer.addEventListener('click', (e) => {
+  const width = progressContainer.clientWidth;
+  const clickX = e.offsetX;
+  const duration = audio.duration;
+  audio.currentTime = (clickX / width) * duration;
+});
 </script>
 
 </body>
