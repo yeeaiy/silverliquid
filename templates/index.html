@@ -49,6 +49,7 @@ body {
   box-shadow: 0 15px 30px rgba(0,0,0,0.2);
   margin: 0 auto 20px auto;
   overflow: hidden;
+  z-index: 10; /* ✅ CD가 항상 위에 표시되도록 */
 }
 
 .lp-container img {
@@ -57,6 +58,7 @@ body {
   object-fit: cover;
   border-radius: 50%;
   display: block;
+  transform-origin: center;
 }
 
 .lp-container::after {
@@ -126,6 +128,7 @@ body {
   transition: width 0.2s linear;
 }
 
+/* 애니메이션 */
 @keyframes cdOutRight {
   0% { transform: scale(1) translateX(0); opacity: 1; }
   50% { transform: scale(1.3) translateX(0); opacity: 1; }
@@ -149,6 +152,13 @@ body {
   50% { transform: scale(1.3) translateX(0); opacity: 1; }
   100% { transform: scale(1) translateX(0); opacity: 1; }
 }
+
+/* 접속 기록 상태 표시 */
+#meta {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #666;
+}
 </style>
 </head>
 <body>
@@ -156,7 +166,6 @@ body {
 <button class="login-btn" onclick="window.location.href='/login'">로그인</button>
 
 <div class="card">
-
   <div class="lp-container" id="lp">
     <img id="albumImg" src="https://image.genie.co.kr/Y/IMAGE/IMG_ALBUM/083/809/794/83809794_1684804647260_1_600x600.JPG" alt="앨범 커버">
   </div>
@@ -173,13 +182,28 @@ body {
     <div class="progress" id="progress"></div>
   </div>
 
+  <div id="meta">서버 상태 확인 중...</div>
+
   <audio id="audio">
      <source src="{{ url_for('static', filename='apple.mp3') }}" type="audio/mpeg">
   </audio>
-
 </div>
 
 <script>
+// ✅ 접속 기록
+async function recordVisit() {
+  const metaEl = document.getElementById('meta');
+  try {
+    const res = await fetch('/record', { method: 'POST' });
+    if (res.ok) metaEl.textContent = '접속 기록 완료 • 서버 연결 정상';
+    else metaEl.textContent = '서버 응답 오류';
+  } catch (err) {
+    metaEl.textContent = '서버에 연결할 수 없습니다.';
+  }
+}
+recordVisit();
+
+// ✅ 음악 플레이어
 const lp = document.getElementById('lp');
 const albumImg = document.getElementById('albumImg');
 const playBtn = document.getElementById('playBtn');
@@ -215,7 +239,7 @@ let spinFrame;
 
 function rotateStep() {
   if (isPlaying) {
-    currentRotation += 0.4; // 회전 속도
+    currentRotation += 0.4;
     albumImg.style.transform = `rotate(${currentRotation}deg)`;
     spinFrame = requestAnimationFrame(rotateStep);
   }
@@ -235,6 +259,11 @@ function updateSong(index) {
   albumImg.src = song.img;
   songTitle.textContent = song.title;
   audio.src = song.src;
+  document.body.style.background = index === 0 
+    ? '#f6f8fa' 
+    : index === 1 
+    ? '#f3f0ff' 
+    : '#fff6f6';
 }
 
 function togglePlay() {
@@ -260,19 +289,18 @@ audio.addEventListener('ended', () => {
 });
 
 function changeSong(next = true) {
-    const outAnim = next ? 'cdOutLeft' : 'cdOutRight';
-    const inAnim = next ? 'cdInRight' : 'cdInLeft';
+  const outAnim = next ? 'cdOutLeft' : 'cdOutRight';
+  const inAnim = next ? 'cdInRight' : 'cdInLeft';
 
   lp.style.animation = `${outAnim} 1s ease forwards`;
 
   stopRotation();
-  currentRotation = 0; // ✅ 회전 각도 초기화
+  currentRotation = 0;
   albumImg.style.transform = `rotate(0deg)`;
 
   setTimeout(() => {
     currentIndex = (currentIndex + (next ? 1 : -1) + songs.length) % songs.length;
     updateSong(currentIndex);
-
     lp.style.animation = `${inAnim} 1s ease forwards`;
 
     if (isPlaying) {
