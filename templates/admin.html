@@ -6,11 +6,16 @@
 <title>관리자 — 방문 기록</title>
 <style>
 body { font-family: system-ui; margin:0; padding:20px; background:#f6f8fa;}
-.card { background:#fff; padding:20px; border-radius:12px; max-width:600px; margin:0 auto; box-shadow:0 6px 20px rgba(0,0,0,0.08);}
-.item { padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;}
+.card { background:#fff; padding:20px; border-radius:12px; max-width:700px; margin:0 auto; box-shadow:0 6px 20px rgba(0,0,0,0.08);}
+.item { padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; gap:10px;}
 .ip { font-weight:700; }
-.time { color:#666; }
-button { padding:6px 12px; border:none; border-radius:8px; cursor:pointer; background:#ff5a5f; color:white; }
+.time { color:#666; flex-shrink:0; }
+.comment-form { display:flex; gap:6px; align-items:center; }
+.comment-input { padding:4px 6px; border-radius:6px; border:1px solid #ccc; font-size:0.9rem; }
+.comment-text { font-size:0.9rem; color:#333; }
+button { padding:6px 10px; border:none; border-radius:8px; cursor:pointer; background:#ff5a5f; color:white; font-size:0.8rem;}
+button:hover { background:#ff3a3f; }
+h1 { margin-top:0; }
 </style>
 </head>
 <body>
@@ -19,8 +24,22 @@ button { padding:6px 12px; border:none; border-radius:8px; cursor:pointer; backg
   {% if records %}
     {% for r in records %}
       <div class="item">
-        <span class="ip">{{ r.ip }}</span>
-        <span class="time">{{ r.time }}</span>
+        <div>
+          <div class="ip">{{ r.ip }}</div>
+          <div class="time">{{ r.time }}</div>
+          {% if r.comment %}
+            <div class="comment-text">💬 {{ r.comment }}</div>
+          {% endif %}
+        </div>
+        <div class="comment-form">
+          <form action="/comment/{{ loop.index0 }}" method="post" style="display:inline;">
+            <input type="text" name="comment" placeholder="메모..." class="comment-input" required>
+            <button type="submit">💾</button>
+          </form>
+          <form action="/delete/{{ loop.index0 }}" method="post" style="display:inline;">
+            <button type="submit">🗑</button>
+          </form>
+        </div>
       </div>
     {% endfor %}
   {% else %}
